@@ -1,3 +1,5 @@
+import type { NeighboorhoodToCoordinateMap } from '../types/neighborhood-to-coordinate-map.type';
+
 export enum TelAvivNeighborhoods {
   JAFFA = 'jaffa',
   FLORENTIN = 'florentin',
@@ -16,5 +18,3 @@ export const telAvivNeighborhoodToCoordinatesMap: NeighboorhoodToCoordinateMap =
     [TelAvivNeighborhoods.OLD_NEW_NORTH]: [32.090453, 34.790655],
     [TelAvivNeighborhoods.OLD_NORTH]: [32.089116, 34.776259],
   } as const;
-
-export type NeighboorhoodToCoordinateMap = Record<string, [number, number]>;

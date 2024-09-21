@@ -1,21 +1,19 @@
 import { GooglePlacesScraper } from './scraper';
+import { telAvivNeighborhoodToCoordinatesMap } from './constants/tel-aviv-neighborhood-to-coordinates-map.constant';
 
-void (async (): Promise<void> => {
+async function scrape(): Promise<void> {
   try {
-    await scrape();
-  } catch (err) {
-    console.error('ERROR', err);
-  } finally {
-    console.log('DONE');
-    process.exit();
+    const scraper = new GooglePlacesScraper();
+    const data = await scraper.searchAllNeighborhoods({
+      neighborhoodToCoordinateMap: telAvivNeighborhoodToCoordinatesMap, // replace this if you want!
+    });
+    await Bun.write(
+      `./data/scraped-data__${Date.now()}.txt`,
+      JSON.stringify(data)
+    );
+  } catch (error) {
+    console.error('Error scraping!', error);
   }
-})();
-
-async function scrape() {
-  const scraper = new GooglePlacesScraper();
-  const data = await scraper.searchAllNeighborhoods();
-  await Bun.write(
-    `./data/scraped-data__${Date.now()}.txt`,
-    JSON.stringify(data)
-  );
 }
+
+await scrape();

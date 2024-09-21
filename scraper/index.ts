@@ -1,16 +1,22 @@
 import { sleep } from 'bun';
-import { telAvivNeighborhoodToCoordinatesMap } from './constants';
-
-interface PlaceData {
-  next_page_token?: string;
-  results: any[];
-}
+import { removeDuplicatePlaces } from './utils';
+import type { NeighboorhoodToCoordinateMap } from '../types/neighborhood-to-coordinate-map.type';
 
 export class GooglePlacesScraper {
-  public async searchAllNeighborhoods() {
+  private readonly apiKey: string;
+
+  constructor({ apiKey }: { apiKey?: string } = {}) {
+    this.apiKey = apiKey || process.env.GOOGLE_PLACES_API_KEY!;
+  }
+
+  public async searchAllNeighborhoods({
+    neighborhoodToCoordinateMap,
+  }: {
+    neighborhoodToCoordinateMap: NeighboorhoodToCoordinateMap;
+  }) {
     const result = [];
     for (const [neighborhood, [xCoord, yCoord]] of Object.entries(
-      telAvivNeighborhoodToCoordinatesMap
+      neighborhoodToCoordinateMap
     )) {
       console.log(`performing search for: ${neighborhood}`);
       try {
@@ -25,7 +31,7 @@ export class GooglePlacesScraper {
       }
     }
 
-    return result;
+    return removeDuplicatePlaces(result);
   }
 
   private async performInitialNearbySearch({
@@ -35,7 +41,7 @@ export class GooglePlacesScraper {
     xCoord: number;
     yCoord: number;
   }): Promise<PlaceData> {
-    const url = `${this.baseUrl}?keyword=coffee&location=${xCoord}%2C${yCoord}&radius=${this.radiusInMeters}&type=cafe&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+    const url = `${this.baseUrl}?keyword=coffee&location=${xCoord}%2C${yCoord}&radius=${this.radiusInMeters}&type=cafe&key=${this.apiKey}`;
     try {
       const response = await fetch(url);
       if (!response.ok) {
@@ -70,7 +76,7 @@ export class GooglePlacesScraper {
   private async getNextPageData(nextPageToken: string): Promise<PlaceData> {
     console.log('getting next page data');
 
-    const nextPageUrl = `${this.baseUrl}?pagetoken=${nextPageToken}&key=${process.env.GOOGLE_PLACES_API_KEY}`;
+    const nextPageUrl = `${this.baseUrl}?pagetoken=${nextPageToken}&key=${this.apiKey}`;
     try {
       const response = await fetch(nextPageUrl);
       if (!response.ok) {
@@ -85,4 +91,9 @@ export class GooglePlacesScraper {
 
   private readonly radiusInMeters = 20000;
   private readonly baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
+}
+
+interface PlaceData {
+  next_page_token?: string;
+  results: any[];
 }
