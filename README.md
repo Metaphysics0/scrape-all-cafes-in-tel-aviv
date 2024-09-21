@@ -1,15 +1,19 @@
-# scrape-all-cafes-in-tel-aviv
+# Scrape all cafe's in Tel Aviv.
 
-To install dependencies:
+A quick tool to scrape all cafes in Tel Aviv.
+Just provide a `.env` file with your `GOOGLE_PLACES_API_KEY`.
 
-```bash
-bun install
-```
+Obtain one for free via the Google Cloud platform.
+
+This project was built with [Bun](https://bun.sh).
+
+Instructions:
 
 To run:
 
 ```bash
+
+bun i # for your first time only
+
 bun run index.ts
 ```
-
-This project was created using `bun init` in bun v1.1.7. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
