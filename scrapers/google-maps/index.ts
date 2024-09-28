@@ -1,22 +1,36 @@
 import { sleep } from 'bun';
 import { removeDuplicatePlaces } from './utils';
-import type { NeighboorhoodToCoordinateMap } from '../types/neighborhood-to-coordinate-map.type';
+import type { NeighboorhoodToCoordinateMap } from '../../types/neighborhood-to-coordinate-map.type';
+import type { GooglePlacesNearbySearchResult } from '../../types/google-places-nearby-search-result.type';
+import { GooglePlacesEndpoints } from './constants/google-places-endpoints.enum';
 
 export class GooglePlacesScraper {
   private readonly apiKey: string;
+  neighborhoodToCoordinateMap: NeighboorhoodToCoordinateMap;
 
-  constructor({ apiKey }: { apiKey?: string } = {}) {
-    this.apiKey = apiKey || process.env.GOOGLE_PLACES_API_KEY!;
-  }
-
-  public async searchAllNeighborhoods({
+  constructor({
+    apiKey,
     neighborhoodToCoordinateMap,
   }: {
     neighborhoodToCoordinateMap: NeighboorhoodToCoordinateMap;
+    apiKey?: string;
   }) {
+    this.apiKey = apiKey || process.env.GOOGLE_PLACES_API_KEY!;
+    this.neighborhoodToCoordinateMap = neighborhoodToCoordinateMap;
+  }
+
+  async scrape(): Promise<{ fileName: string; data: string }> {
+    const data = await this.searchAllNeighborhoods();
+    return {
+      data: JSON.stringify(data),
+      fileName: Date.now() + '.json',
+    };
+  }
+
+  private async searchAllNeighborhoods() {
     const result = [];
     for (const [neighborhood, [xCoord, yCoord]] of Object.entries(
-      neighborhoodToCoordinateMap
+      this.neighborhoodToCoordinateMap
     )) {
       console.log(`performing search for: ${neighborhood}`);
       try {
@@ -47,7 +61,10 @@ export class GooglePlacesScraper {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return response.json();
+      const data = await response.json();
+      if (data.error_message) throw new Error(data.error_message);
+
+      return data;
     } catch (error) {
       console.error('Error performing initial nearby search:', error);
       throw error;
@@ -89,11 +106,11 @@ export class GooglePlacesScraper {
     }
   }
 
-  private readonly radiusInMeters = 20000;
-  private readonly baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json`;
+  private readonly radiusInMeters = 30000;
+  private readonly baseUrl = GooglePlacesEndpoints.NEARBY_SEARCH;
 }
 
 interface PlaceData {
   next_page_token?: string;
-  results: any[];
+  results: GooglePlacesNearbySearchResult[];
 }
